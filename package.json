@@ -1,0 +1,16 @@
+{
+  "name": "avsync.live-benchmark",
+  "version": "1.0.0",
+  "description": "",
+  "main": "benchmark.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash-fp": "^0.10.4",
+    "open": "^8.4.0",
+    "puppeteer": "^13.7.0"
+  }
+}
