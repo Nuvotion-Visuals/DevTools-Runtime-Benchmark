@@ -12,6 +12,8 @@ const fs = require('fs');
     defaultViewport: null
   })
   try {
+    const args = process.argv.slice(2);
+
     const { 
       benchmarkName, 
       benchmarkDescription, 
@@ -89,6 +91,40 @@ const fs = require('fs');
     const percentageDropped = ((droppedFrameEvents.length / totalFrames) * 100).toFixed(2)
     const groupsDropped = groups.filter(group => group.length > 1).length
 
+   
+    const groupData = groups.map((group, index) => {
+        const time = `${((new Date((trace?.traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)} - ${((new Date((trace?.traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)}`
+        const durationAffected = (group.length * (1000 / 60)).toFixed(2)
+        const droppedFrames = group.length
+        const percentageOfTotalDropped = ((group.length / droppedFrameEvents.length) * 100).toFixed(0)
+        const flag = durationAffected > ((1000/60) * 2)
+        return {
+          index,
+          time,
+          durationAffected,
+          droppedFrames,
+          percentageOfTotalDropped,
+          flag
+        }
+      })
+
+    const data = {
+      benchmarkName,
+      name,
+      duration: ((lastFrameTime - firstFrameTime) * 0.000001).toFixed(0),
+      totalFrames: droppedFrameEvents.length,
+      droppedFrames: droppedFrameEvents.length,
+      percentageDropped,
+      groupsDropped,
+      variation: args?.[0],
+      commands
+    }
+
+    fs.writeFileSync(
+      `benchmark-result/${name}/${name}-info.json`,
+      JSON.stringify(data, null, 2)
+    )
+
     fs.writeFileSync(
       `benchmark-result/${name}/${name}.html`,
       `
@@ -130,7 +166,7 @@ const fs = require('fs');
             <main class="container">
               <hgroup>
                 <h2>Benchmark: ${benchmarkName}</h2>
-                <h3>${benchmarkDescription}</h3>
+                <h3>${args?.[0]}</h3>
               </hgroup>
 
               <details>
@@ -171,7 +207,7 @@ const fs = require('fs');
                 <tbody>
                   <tr>
                     <td><b>Duration</b></td>
-                    <td>${((lastFrameTime - firstFrameTime) * 0.000001).toFixed(0)} seconds</td>
+                    <td>${data.duration} seconds</td>
                   </tr>
                   <tr>
                     <td><b>Total Frames</b></td>
@@ -179,7 +215,7 @@ const fs = require('fs');
                   </tr>
                   <tr>
                     <td><b>Dropped Frames</b></td>
-                    <td>${droppedFrameEvents.length}</td>
+                    <td>${data.droppedFrames}</td>
                   </tr>
                   <tr>
                     <td><b>Percentage Dropped</b></td>
@@ -204,12 +240,8 @@ const fs = require('fs');
                 </thead>
                 <tbody>
                   ${
-                    groups.map((group, index) => {
-                      const time = `${((new Date((trace?.traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)} - ${((new Date((trace?.traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)}`
-                      const durationAffected = (group.length * (1000 / 60)).toFixed(2)
-                      const droppedFrames = group.length
-                      const percentageOfTotalDropped = ((group.length / droppedFrameEvents.length) * 100).toFixed(0)
-                      const flag = durationAffected > ((1000/60) * 2)
+                    groupData.map((data, index) => {
+                      const { time, durationAffected, droppedFrames, percentageOfTotalDropped, flag } = data
                       return `
                         <tr>
                           <td ${flag ? 'style="color:red;";' : ''}>${index}</td>
@@ -230,8 +262,6 @@ const fs = require('fs');
         </html>
       `
     )
-
-    await open(`http://localhost:4000/${name}/${name}.html`)
 
     console.log(`Benchmark report generated: benchmark-result/${name}/${name}.html`)
   }
