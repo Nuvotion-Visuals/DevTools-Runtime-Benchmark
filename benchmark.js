@@ -103,7 +103,8 @@ const fs = require('fs');
               }
               iframe {
                 width: 100%;
-                min-height: 700px;
+                min-height: 800px;
+                height: 90vh;
               }
             </style>
           </head>
@@ -204,10 +205,9 @@ const fs = require('fs');
                   }
                 </tbody>
               </table>
-
-              <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${name}/${name}.json`}'>
-              </iframe>
             </main>
+            <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${name}/${name}.json`}'>
+            </iframe>
           </body>
         </html>
       `
