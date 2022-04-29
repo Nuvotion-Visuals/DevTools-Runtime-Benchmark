@@ -1,2 +1,9 @@
+.DS_Store
+
 node_modules
+config_dev.js
+config_prod.js
+
 benchmark-result
+
+test/cypress/videos
