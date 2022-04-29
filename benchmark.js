@@ -101,6 +101,10 @@ const fs = require('fs');
               small {
                 color: var(--muted-color);
               }
+              iframe {
+                width: 100%;
+                min-height: 700px;
+              }
             </style>
           </head>
           <body>
@@ -200,13 +204,16 @@ const fs = require('fs');
                   }
                 </tbody>
               </table>
+
+              <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${name}/${name}.json`}'>
+              </iframe>
             </main>
           </body>
         </html>
       `
     )
 
-    await open(`benchmark-result/${name}/${name}.html`)
+    await open(`http://localhost:4000/${name}/${name}.html`)
 
     console.log(`Benchmark report generated: benchmark-result/${name}/${name}.html`)
   }

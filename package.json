@@ -1,5 +1,5 @@
 {
-  "name": "timeline-viewer",
+  "name": "avsync.live-benchmark",
   "version": "1.0.0",
   "description": "Works with public github urls, github gists, and files on google drive (once authenticated).",
   "main": "src/index.js",
@@ -29,6 +29,8 @@
     "sw-precache": "^5.2.1"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
     "lodash-fp": "^0.10.4",
     "open": "^8.4.0",
     "puppeteer": "^13.7.0"
