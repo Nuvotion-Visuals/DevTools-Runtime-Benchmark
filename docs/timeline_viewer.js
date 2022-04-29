@@ -22,7 +22,6 @@ class Viewer {
     this.statusElem = document.getElementById('status');
     this.infoMessageElem = document.getElementById('info-message');
     this.uploadToDriveElem = document.getElementById('upload-to-drive');
-    this.networkOnlineStatusElem = document.getElementById('online-status');
     this.networkOfflineStatusElem = document.getElementById('offline-status');
     this.authBtn = document.getElementById('auth');
     this.revokeAccessBtn = document.getElementById('revoke-access');
@@ -53,7 +52,6 @@ class Viewer {
     // Start loading DevTools. (checkAuth will be racing against it)
     this.statusElem.hidden = false;
 
-    this.handleNetworkStatus();
     this.devTools.init();
 
     if (!this.welcomeView) {
@@ -136,32 +134,6 @@ class Viewer {
     UI.inspectorView.showPanel('timeline').then(_ => {
       this.toggleUploadToDriveElem(this.canUploadToDrive);
     });
-  }
-
-  handleNetworkStatus() {
-    if (navigator.onLine) {
-      this.toggleNetworkStatusMessage();
-    } else {
-      this.toggleNetworkStatusMessage({status: 'offline'});
-    }
-
-    window.addEventListener('online', _ => {
-      this.toggleNetworkStatusMessage();
-    }, false);
-
-    window.addEventListener('offline', _ => {
-      this.toggleNetworkStatusMessage({status: 'offline'});
-    }, false);
-  }
-
-  toggleNetworkStatusMessage(options = {status: 'online'}) {
-    if (options.status === 'online') {
-      this.networkOnlineStatusElem.hidden = false;
-      this.networkOfflineStatusElem.hidden = true;
-    } else {
-      this.networkOnlineStatusElem.hidden = true;
-      this.networkOfflineStatusElem.hidden = false;
-    }
   }
 
   parseURLforTimelineId(url) {

@@ -50,14 +50,15 @@ app.get('/', function (req, res, next) {
         <nav>
           <ul></ul>
           <ul>
-            <li><h1>Benchmark Report Viewer</h1></li>
+            <li><a href="/"><h1>Benchmark Report Viewer</h1></a></li>
           </ul>
           <ul></ul>
         </nav>
+        
         <table role="grid">
           <thead>
             <tr>
-              <th scope="col" width="36px"></th>
+              <th scope="col" width="36px"><a href="#" role="button" id='compare'>Compare</a></th>
               <th scope="col" width="36px" ><b>Index</b></th>
               <th scope="col" width="200px"><b>Date</b></th>
               <th scope="col" width="300px"><b>Benchmark Name</b></th>
@@ -70,7 +71,7 @@ app.get('/', function (req, res, next) {
                 const info = directory.split('_')
                 return `
                   <tr>
-                    <td style='text-align:center; vertical-align:middle'><input type="checkbox" /></td>
+                    <td style='text-align:center; vertical-align:middle'><input type="checkbox" class="benchmark"/></td>
                     <td style='text-align:center; vertical-align:middle'>${index}</td>
                     <td><a href='http://localhost:4000/${directory}/${directory}.html'>${info[2]}</a></td>
                     <td>${info[1]}</td>
@@ -81,7 +82,15 @@ app.get('/', function (req, res, next) {
             }
           </tbody>
         </table>
+        <div id='comparison'>
+        </div>
       </body>
+      <script>
+        const str = '${directories.join(',')}'
+        window.benchmarks = str.split(',');
+      </script>
+      <script src="./report-server-script.js" async></script>
+      
     </html>
   `)
 })

@@ -106,9 +106,27 @@ const fs = require('fs');
                 min-height: 800px;
                 height: 90vh;
               }
+              nav {
+                background-color: var(--card-background-color);
+                box-shadow: var(--card-box-shadow);
+              }
+              nav h1 {
+                margin-bottom: 0;
+                font-size: 1.25rem;
+              }
+              html {
+                background-color: var(--background-color);
+              }
             </style>
           </head>
           <body>
+            <nav>
+              <ul></ul>
+              <ul>
+                <li><a href="/"><h1>Benchmark Report Viewer</h1></a></li>
+              </ul>
+              <ul></ul>
+            </nav>
             <main class="container">
               <hgroup>
                 <h2>Benchmark: ${benchmarkName}</h2>
