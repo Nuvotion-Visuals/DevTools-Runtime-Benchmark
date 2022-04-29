@@ -28,6 +28,11 @@ const fs = require('fs');
 
     // open page
     const page = await browser.newPage()
+
+    // show FPS
+    const devtoolsProtocolClient = await page.target().createCDPSession()
+    await devtoolsProtocolClient.send('Overlay.setShowFPSCounter', { show: true })
+
     await page.goto(url, { waitUntil: 'domcontentloaded' })
     
     let commandIndex = 0
