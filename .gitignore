@@ -4,6 +4,7 @@ node_modules
 config_dev.js
 config_prod.js
 
-benchmark-result
+benchmark-result/*
+!benchmark-result/report-server-script.js
 
 test/cypress/videos
