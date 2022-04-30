@@ -39,9 +39,6 @@
     "open": "^8.4.0",
     "puppeteer": "^13.7.0"
   },
-  "pre-push": [
-    "generate-sw-prod"
-  ],
   "directories": {
     "doc": "docs"
   },
