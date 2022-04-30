@@ -45,6 +45,7 @@ app.get('/', function (req, res, next) {
       <html>
       <head>
         <title>DevTools Runtime Benchmark</title>
+        <link rel="icon" href="favicon.ico" type="image/x-icon" />
         <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
         <style>
           small {
@@ -74,7 +75,7 @@ app.get('/', function (req, res, next) {
         <nav>
           <ul></ul>
           <ul>
-            <li><a href="/"><h1>DevTools Runtime Benchmark</h1></a></li>
+            <li ><a href="/" style="display: flex;"><img style="width: 36px; margin-right: 16px;" src='icon.svg' /><h1>DevTools Runtime Benchmark</h1></a></li>
           </ul>
           <ul></ul>
         </nav>
