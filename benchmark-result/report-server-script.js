@@ -27,20 +27,7 @@ document.querySelector('#startBenchmark').addEventListener('click', event => {
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify({ variation: document.querySelector('#variation').value })
   }).then(res => {
-    document.querySelector('#newBenchmark').innerHTML = `
-      <dialog open>
-        <article>
-          <h3>Benchmark Completed</h3>
-          <p>
-            The benchmark was successful. Either refresh the list of benchmarks, or view the new report.
-          </p>
-          <footer>
-            <a href="/" role="button" class="secondary">Refresh List</a>
-            <a href="/" role="button">View report</a>
-          </footer>
-        </article>
-      </dialog>
-    `
+    location.reload()
   })
 
   document.querySelector('#newBenchmark').innerHTML = `
@@ -57,6 +44,6 @@ document.querySelector('#delete').addEventListener('click', event => {
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify({ activeBenchmarks })
   }).then(res => {
-    location.reload();
+    location.reload()
   })
 })

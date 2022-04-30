@@ -131,7 +131,8 @@ const fs = require('fs');
         <!doctype html>
           <html>
           <head>
-            <title>${name}</title>
+            <title>${name} - DevTools Runtime Benchmark</title>
+            <link rel="icon" href="favicon.ico" type="image/x-icon" />
             <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
             <style>
               small {
@@ -159,7 +160,7 @@ const fs = require('fs');
             <nav>
               <ul></ul>
               <ul>
-                <li><a href="/"><h1>Benchmark Report Viewer</h1></a></li>
+                <li ><a href="/" style="display: flex;"><img style="width: 36px; margin-right: 16px;" src='icon.svg' /><h1>DevTools Runtime Benchmark</h1></a></li>
               </ul>
               <ul></ul>
             </nav>
