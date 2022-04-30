@@ -32,7 +32,7 @@ app.get('/', function (req, res, next) {
   const directories = fs.readdirSync(__dirname + '\\benchmark-result\\', { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name)
-    .filter(benchmark => fs.existsSync(`/benchmark-result/${benchmark}`))
+    .filter(benchmark => fs.existsSync(__dirname + `/benchmark-result/${benchmark}/${benchmark}.json`))
 
   const benchmarkInfo = {}
 
