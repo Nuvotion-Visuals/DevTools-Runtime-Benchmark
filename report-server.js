@@ -40,7 +40,7 @@ app.get('/', function (req, res, next) {
     <!doctype html>
       <html>
       <head>
-        <title>Benchmark Report Viewer</title>
+        <title>DevTools Runtime Benchmark</title>
         <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
         <style>
           small {
@@ -72,7 +72,7 @@ app.get('/', function (req, res, next) {
         <nav>
           <ul></ul>
           <ul>
-            <li><a href="/"><h1>AVsync.LIVE Benchmark</h1></a></li>
+            <li><a href="/"><h1>DevTools Runtime Benchmark</h1></a></li>
           </ul>
           <ul></ul>
         </nav>
