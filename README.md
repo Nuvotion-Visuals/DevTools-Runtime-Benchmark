@@ -1,4 +1,4 @@
-# AVsync.LIVE Benchmark
+# DevTools Runtime Benchmark
 
 Run automated performance analysis tests using Puppetter. Generate and compare HTML reports 
 of information like:
