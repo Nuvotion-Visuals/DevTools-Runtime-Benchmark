@@ -116,22 +116,24 @@ const fs = require('fs');
       droppedFrames: droppedFrameEvents.length,
       percentageDropped,
       groupsDropped,
+      groupData,
       variation: args?.[0],
-      commands
+      commands,
+      metadata
     }
 
     fs.writeFileSync(
-      `benchmark-result/${name}/${name}-info.json`,
+      `benchmark-result/${data.name}/${data.name}-info.json`,
       JSON.stringify(data, null, 2)
     )
 
     fs.writeFileSync(
-      `benchmark-result/${name}/${name}.html`,
+      `benchmark-result/${data.name}/${data.name}.html`,
       `
         <!doctype html>
           <html>
           <head>
-            <title>${name} - DevTools Runtime Benchmark</title>
+            <title>${data.name} - DevTools Runtime Benchmark</title>
             <link rel="icon" href="favicon.ico" type="image/x-icon" />
             <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
             <style>
@@ -166,8 +168,8 @@ const fs = require('fs');
             </nav>
             <main class="container">
               <hgroup>
-                <h2>Benchmark: ${benchmarkName}</h2>
-                <h3>${args?.[0]}</h3>
+                <h2>Benchmark: ${data.benchmarkName}</h2>
+                <h3>${data.variation}</h3>
               </hgroup>
 
               <details>
@@ -183,7 +185,7 @@ const fs = require('fs');
                 </thead>
                 <tbody>
                   ${
-                    commands.map(({ command, payload, description}, index) => `
+                    data.commands.map(({ command, payload, description}, index) => `
                         <tr>
                           <td>${index}</td>
                           <td>${command}</td>
@@ -197,11 +199,11 @@ const fs = require('fs');
               </table>
               </details>
               
-              <small><b>Date:</b> ${metadata['trace-capture-datetime']}</small>
+              <small><b>Date:</b> ${data.metadata['trace-capture-datetime']}</small>
               <br />
-              <small><b>User Agent:</b> ${metadata['user-agent']}</small>
+              <small><b>User Agent:</b> ${data.metadata['user-agent']}</small>
               <br />
-              <small><b>Hardware:</b> ${metadata['num-cpus']} CPUs | ${(metadata['physical-memory'] / 1024).toFixed(0)} GB - ${metadata['cpu-brand']}\n</small>
+              <small><b>Hardware:</b> ${data.metadata['num-cpus']} CPUs | ${(data.metadata['physical-memory'] / 1024).toFixed(0)} GB - ${data.metadata['cpu-brand']}\n</small>
               <br />
               <br />
               <table style="table-layout: fixed;">
@@ -212,7 +214,7 @@ const fs = require('fs');
                   </tr>
                   <tr>
                     <td><b>Total Frames</b></td>
-                    <td>${totalFrames}</td>
+                    <td>${data.totalFrames}</td>
                   </tr>
                   <tr>
                     <td><b>Dropped Frames</b></td>
@@ -220,11 +222,11 @@ const fs = require('fs');
                   </tr>
                   <tr>
                     <td><b>Percentage Dropped</b></td>
-                    <td ${percentageDropped > 5 ? 'style="color:red;";' : ''}>${percentageDropped}%</td>
+                    <td ${data.percentageDropped > 5 ? 'style="color:red;";' : ''}>${data.percentageDropped}%</td>
                   </tr>
                   <tr>
                     <td><b>Groups of > 1 dropped frames</b></td>
-                    <td ${groupsDropped > 0 ? 'style="color:red;";' : ''}>${groupsDropped}</td>
+                    <td ${data.groupsDropped > 0 ? 'style="color:red;";' : ''}>${data.groupsDropped}</td>
                   </tr>
                 </tbody>
               </table>
@@ -241,7 +243,7 @@ const fs = require('fs');
                 </thead>
                 <tbody>
                   ${
-                    groupData.map((data, index) => {
+                    data.groupData.map((data, index) => {
                       const { time, durationAffected, droppedFrames, percentageOfTotalDropped, flag } = data
                       return `
                         <tr>
@@ -257,7 +259,7 @@ const fs = require('fs');
                 </tbody>
               </table>
             </main>
-            <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${name}/${name}.json`}'>
+            <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${data.name}/${data.name}.json`}'>
             </iframe>
           </body>
         </html>
