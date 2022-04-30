@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "kill $(lsof -t -i:8838) & npm run server:test & cypress run --browser chrome",
-    "timeline-viewer-server:dev": "npm run generate-sw-dev && open-cli http://localhost:8833/ && npm run server",
+    "timeline-viewer-server:dev": "npm run generate-sw-dev && open-cli http://localhost:8833/ && http-server docs -a localhost -p 8833 -s",
     "timeline-viewer-server:prod": "http-server docs -a localhost -p 8833 -s",
     "timeline-viewer-server:test": "http-server docs -a localhost -p 8838 -s",
     "benchmark-report-server:dev": "nodemon report-server.js",
