@@ -6,7 +6,7 @@ const fs = require('fs');
 
 (async () => {
   const browser = await puppeteer.launch({
-    args: [`--window-size=1920,1080`, '--use-fake-ui-for-media-stream', '--no-sandbox'],
+    args: [`--window-size=1920,1080`, '--use-fake-ui-for-media-stream', '--no-sandbox', '--start-fullscreen'],
     headless: false,
     devtools: true,
     defaultViewport: null

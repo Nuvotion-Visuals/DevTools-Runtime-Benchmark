@@ -48,3 +48,15 @@ document.querySelector('#startBenchmark').addEventListener('click', event => {
     <progress id='loading'>Loading...<</progress>
   `
 })
+
+document.querySelector('#delete').addEventListener('click', event => {
+  const activeIndicies = checked.reduce((a, e, i) => e ? a.concat(i) : a, [])
+  const activeBenchmarks = activeIndicies.map(item => window.benchmarks[item])
+  fetch('/benchmark', {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'}, 
+    body: JSON.stringify({ activeBenchmarks })
+  }).then(res => {
+    location.reload();
+  })
+})
