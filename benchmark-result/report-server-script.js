@@ -108,13 +108,13 @@ document.querySelector('#compare').addEventListener('click', event => {
               <tbody>
                 ${
                   data.groupData.map((data, index) => {
-                    const { time, durationAffected, droppedFrames, percentageOfTotalDropped, flag } = data
+                    const { time, durationAffected, groupDroppedFrames, percentageOfTotalDropped, flag } = data
                     return `
                       <tr>
                         <td ${flag ? 'style="color:red;";' : ''}>${index}</td>
                         <td ${flag ? 'style="color:red;";' : ''}>${time}</td>
                         <td ${flag ? 'style="color:red;";' : ''}>${durationAffected}</td>
-                        <td ${flag ? 'style="color:red;";' : ''}>${droppedFrames}</td>
+                        <td ${flag ? 'style="color:red;";' : ''}>${groupDroppedFrames}</td>
                         <td ${flag ? 'style="color:red;";' : ''}>${percentageOfTotalDropped}%</td>
                       </tr>
                     `

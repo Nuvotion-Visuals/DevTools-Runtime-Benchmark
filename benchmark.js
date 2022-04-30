@@ -6,7 +6,7 @@ const fs = require('fs');
 
 (async () => {
   const browser = await puppeteer.launch({
-    args: [`--window-size=1920,1080`, '--use-fake-ui-for-media-stream', '--no-sandbox', '--start-fullscreen'],
+    args: [`--window-size=1920,1080`, '--use-fake-ui-for-media-stream', '--no-sandbox','--disable-gpu-driver-bug-workarounds'],
     headless: false,
     devtools: true,
     defaultViewport: null
@@ -32,10 +32,15 @@ const fs = require('fs');
     const page = await browser.newPage()
 
     // show FPS
-    const devtoolsProtocolClient = await page.target().createCDPSession()
-    await devtoolsProtocolClient.send('Overlay.setShowFPSCounter', { show: true })
+    // const devtoolsProtocolClient = await page.target().createCDPSession()
+    // await devtoolsProtocolClient.send('Overlay.setShowFPSCounter', { show: true })
+
+    // console logging
+   
 
     await page.goto(url, { waitUntil: 'domcontentloaded' })
+
+    let consoleLogs = []
     
     let commandIndex = 0
     while (commandIndex < commands.length) {
@@ -54,6 +59,21 @@ const fs = require('fs');
           payload === 'start'
             ? await page.tracing.start({path: `benchmark-result/${name}/${name}.json`, screenshots: true})
             : await page.tracing.stop()
+
+          // if (payload === 'start') {
+          //   await devtoolsProtocolClient.send('Log.enable')
+
+          //   devtoolsProtocolClient.on('Log.entryAdded', async ({ entry }) => {
+          //     consoleLogs.push(entry)
+          //   })
+          // }
+          // if (payload === 'stop') {
+          //   await devtoolsProtocolClient.send('Log.disable')
+          //   fs.writeFileSync(
+          //     `benchmark-result/${name}/${name}-console.json`,
+          //     JSON.stringify(console, null, 2)
+          //   )
+          // }
           break
         default:
           break
@@ -62,6 +82,7 @@ const fs = require('fs');
     }
 
     await browser.close()
+    await browser.disconnect()
 
     // // read benchmark
     const trace = JSON.parse(fs.readFileSync(`benchmark-result/${name}/${name}.json`, 'utf8'))
@@ -71,13 +92,14 @@ const fs = require('fs');
 
     // get all events for DroppedFrames
     const droppedFrameEvents = trace?.traceEvents.filter(event => event.name === 'DroppedFrame')
-      .filter(event => event.args.frameSeqId > firstFrameSeqId + 13) // do not count for the first 13 frames
 
     // get total number of frames
-    const totalFrames = (trace?.traceEvents.filter(event => event.args.frameSeqId).length - firstFrameSeqId) - 13 // count only frames in the benchmark, do not count for the first 13 frames
+    const totalFrames = (trace?.traceEvents.filter(event => event.args.frameSeqId).length - firstFrameSeqId) // count only frames in the benchmark
 
     // get groups of dropped frames
     const groups = groupSequences(droppedFrameEvents.map(event => event.args.frameSeqId))
+
+    const droppedFrames = groups.map(group => group.length).reduce((a, b) => a + b)
 
     // dates of first and last frames
     const firstFrameTime = new Date(trace?.traceEvents.filter(event => event.args.frameSeqId)[0].ts)
@@ -88,21 +110,20 @@ const fs = require('fs');
 
     console.log('Analyzing benchmark.json for dropped frames...\n')
 
-    const percentageDropped = ((droppedFrameEvents.length / totalFrames) * 100).toFixed(2)
+    const percentageDropped = ((droppedFrames / totalFrames) * 100).toFixed(2)
     const groupsDropped = groups.filter(group => group.length > 1).length
 
-   
     const groupData = groups.map((group, index) => {
         const time = `${((new Date((trace?.traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)} - ${((new Date((trace?.traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)}`
-        const durationAffected = (group.length * (1000 / 60)).toFixed(2)
-        const droppedFrames = group.length
-        const percentageOfTotalDropped = ((group.length / droppedFrameEvents.length) * 100).toFixed(0)
+        const groupDroppedFrames = group.length
+        const durationAffected = (groupDroppedFrames * (1000 / 60)).toFixed(2)
+        const percentageOfTotalDropped = ((groupDroppedFrames / droppedFrames) * 100).toFixed(0)
         const flag = durationAffected > ((1000/60) * 2)
         return {
           index,
           time,
           durationAffected,
-          droppedFrames,
+          groupDroppedFrames,
           percentageOfTotalDropped,
           flag
         }
@@ -112,8 +133,8 @@ const fs = require('fs');
       benchmarkName,
       name,
       duration: ((lastFrameTime - firstFrameTime) * 0.000001).toFixed(0),
-      totalFrames: droppedFrameEvents.length,
-      droppedFrames: droppedFrameEvents.length,
+      totalFrames,
+      droppedFrames,
       percentageDropped,
       groupsDropped,
       groupData,
@@ -244,13 +265,13 @@ const fs = require('fs');
                 <tbody>
                   ${
                     data.groupData.map((data, index) => {
-                      const { time, durationAffected, droppedFrames, percentageOfTotalDropped, flag } = data
+                      const { time, durationAffected, groupDroppedFrames, percentageOfTotalDropped, flag } = data
                       return `
                         <tr>
                           <td ${flag ? 'style="color:red;";' : ''}>${index}</td>
                           <td ${flag ? 'style="color:red;";' : ''}>${time}</td>
                           <td ${flag ? 'style="color:red;";' : ''}>${durationAffected}</td>
-                          <td ${flag ? 'style="color:red;";' : ''}>${droppedFrames}</td>
+                          <td ${flag ? 'style="color:red;";' : ''}>${groupDroppedFrames}</td>
                           <td ${flag ? 'style="color:red;";' : ''}>${percentageOfTotalDropped}%</td>
                         </tr>
                       `
