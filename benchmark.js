@@ -241,7 +241,7 @@ const percentile = require("percentile");
               </hgroup>
 
               <details>
-                <summary>Benchmark Commands</summary>
+                <summary><b>Commands</b></summary>
                 <table role="grid">
                 <thead>
                   <tr>
@@ -275,9 +275,10 @@ const percentile = require("percentile");
               <br />
               <br />
 
-              <h1>Score: ${data.score}</h1>
+              <h1 style='margin-bottom: 0 !important; '>Score: ${data.score}</h1>
+              <blockquote><b>How It's Calculated:</b> <i>100 * (P75 FPS / 60) - (milliseconds of Problematic Frames / 100)</i></blockquote>
 
-              <h4 style='padding-bottom: 0;'>FPS Percentiles</h4>
+              <h4>FPS Percentiles</h4>
               <table role="grid">
                 <thead>
                   <tr>
@@ -306,8 +307,9 @@ const percentile = require("percentile");
                   </tr>
                 </tbody>
               </table>
+              <blockquote><b>How to Read:</b> <i>P75: 75% of frametimes are better than X FPS.</i></blockquote>
 
-              <h4 style='padding-bottom: 0;'>Minimum FPS Percentages</h4>
+              <h4>Minimum FPS Percentages</h4>
                 <table role="grid">
                   <thead>
                     <tr>
@@ -336,8 +338,9 @@ const percentile = require("percentile");
                     </tr>
                   </tbody>
                 </table>
+                <blockquote><b>How to Read:</b> <i>30: X% of the frames were above 30 FPS</i></blockquote>
 
-              <h4 style='padding-bottom: 0;'>Performance Concerns</h4>
+              <h4>Problematic Frames</h4>
               <table role="grid">
               <thead>
                 <tr>
@@ -361,8 +364,14 @@ const percentile = require("percentile");
                 }
               </tbody>
             </table>
+            <blockquote><b>How to Read:</b> <i>Frame A, which occurs between B-C milliseconds (ms) in the benchmark, had a problematic duration of D. Command E in the benchmark may be causing this.</i></blockquote>
+            </article>
             </main>
-            <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${data.name}/${data.name}.json`}'>
+            <iframe 
+              style="position: absolute; top: -9999em; visibility: hidden;"
+              onload="this.style.position='static'; this.style.visibility='visible';"
+              src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${data.name}/${data.name}.json`}'
+            >
             </iframe>
           </body>
         </html>

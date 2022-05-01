@@ -10,7 +10,7 @@ checkboxes.forEach((checkbox, index) => {
 
 document.querySelector('#compare').addEventListener('click', event => {
   const activeIndicies = checked.reduce((a, e, i) => e ? a.concat(i) : a, [])
-  const activeBenchmarks = activeIndicies.map(item => window.benchmarks[item])
+  const activeBenchmarks = activeIndicies.map(item => window.benchmarkNames[item])
   const activeBenchmarksJsonUrls = activeBenchmarks.map(name => `http://localhost:4000/${name}/${name}.json`)
   const activeBenchmarksInfoJsonUrls = activeBenchmarks.map(name => `http://localhost:4000/${name}/${name}-info.json`)
 
@@ -70,9 +70,10 @@ document.querySelector('#compare').addEventListener('click', event => {
             <br />
             <br />
 
-            <h1>Score: ${data.score}</h1>
+            <h1 style='margin-bottom: 0 !important; '>Score: ${data.score}</h1>
+            <blockquote><b>How It's Calculated:</b> <i>100 * (P75 FPS / 60) - (milliseconds of Problematic Frames / 100)</i></blockquote>
 
-            <h4 style='padding-bottom: 0;'>FPS Percentiles</h4>
+            <h4>FPS Percentiles</h4>
             <table role="grid">
               <thead>
                 <tr>
@@ -101,8 +102,9 @@ document.querySelector('#compare').addEventListener('click', event => {
                 </tr>
               </tbody>
             </table>
+            <blockquote><b>How to Read:</b> <i>P75: 75% of frametimes are better than X FPS.</i></blockquote>
 
-            <h4 style='padding-bottom: 0;'>Minimum FPS Percentages</h4>
+            <h4>Minimum FPS Percentages</h4>
               <table role="grid">
                 <thead>
                   <tr>
@@ -131,8 +133,9 @@ document.querySelector('#compare').addEventListener('click', event => {
                   </tr>
                 </tbody>
               </table>
+              <blockquote><b>How to Read:</b> <i>30: X% of the frames were above 30 FPS</i></blockquote>
 
-            <h4 style='padding-bottom: 0;'>Performance Concerns</h4>
+            <h4>Problematic Frames</h4>
             <table role="grid">
             <thead>
               <tr>
@@ -156,6 +159,7 @@ document.querySelector('#compare').addEventListener('click', event => {
               }
             </tbody>
           </table>
+          <blockquote><b>How to Read:</b> <i>Frame A, which occurs between B-C milliseconds (ms) in the benchmark, had a problematic duration of D. Command E in the benchmark may be causing this.</i></blockquote>
           </article>
         `
       }
@@ -164,7 +168,12 @@ document.querySelector('#compare').addEventListener('click', event => {
         <div class="grid" style="padding: 0 16px;">
           ${activeBenchmarks.map((name, index) => renderCard(finalResult[index])).join('')}
         </div>
-        <iframe src='http://localhost:8833?loadTimelineFromURL=${activeBenchmarksJsonUrls.join(',')}'></iframe>
+        <iframe
+          style="position: absolute; top: -9999em; visibility: hidden;"
+          onload="this.style.position='static'; this.style.visibility='visible';"
+          src='http://localhost:8833?loadTimelineFromURL=${activeBenchmarksJsonUrls.join(',')}'
+        >
+        </iframe>
       `
     }
   )
@@ -190,7 +199,7 @@ document.querySelector('#startBenchmark').addEventListener('click', event => {
 
 document.querySelector('#delete').addEventListener('click', event => {
   const activeIndicies = checked.reduce((a, e, i) => e ? a.concat(i) : a, [])
-  const activeBenchmarks = activeIndicies.map(item => window.benchmarks[item])
+  const activeBenchmarks = activeIndicies.map(item => window.benchmarkNames[item])
   fetch('/benchmark', {
     method: 'DELETE',
     headers: {'Content-Type': 'application/json'}, 
@@ -198,4 +207,48 @@ document.querySelector('#delete').addEventListener('click', event => {
   }).then(res => {
     location.reload()
   })
+})
+
+const renderInfo = (data) => `
+  <blockquote style="margin-top: 0;">
+    <b>Description: </b>${data.benchmarkDescription}
+    <br />
+    <br />
+    <details style="margin-bottom: 0;">
+      <summary><b>Commands</b></summary>
+      <table role="grid">
+      <thead>
+        <tr>
+          <th scope="col"><b>Index</b></th>
+          <th scope="col"><b>Command</b></th>
+          <th scope="col"><b>Payload</b></th>
+          <th scope="col"><b>Description</b></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          data.commands.map(({ command, payload, description}, index) => `
+              <tr>
+                <td>${index}</td>
+                <td>${command}</td>
+                <td>${payload}</td>
+                <td>${description}</td>
+              </tr>
+            `
+          ).join('\n')
+        }
+      </tbody>
+    </table>
+    </details>
+  </blockquote>  
+
+  
+`
+
+const data = window.benchmarks.find(benchmark => benchmark.benchmarkName === document.querySelector('#selectBenchmark').value)
+document.querySelector('#benchmarkDetails').innerHTML = renderInfo(data)
+
+document.querySelector('#selectBenchmark').addEventListener('change', event => {
+  const data = window.benchmarks.find(benchmark => benchmark.benchmarkName === event.target.value)
+  document.querySelector('#benchmarkDetails').innerHTML = renderInfo(data)
 })

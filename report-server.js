@@ -81,7 +81,6 @@ app.get('/', function (req, res, next) {
           html {
             background-color: var(--background-color);
           }
-  
         </style>
       </head>
       <body class="amp-dark-mode">
@@ -138,15 +137,21 @@ app.get('/', function (req, res, next) {
           <h4>Perform a New Benchmark</h4>
           <label for='selectBenchmark'>Benchmark</label>
 
-          <select id="selectBenchmark">
+          <select id="selectBenchmark" >
             ${ benchmarks.map(benchmark => '<option>' + benchmark.benchmarkName + '</option>')}
           </select>
 
 
+          <div id='benchmarkDetails'>
+          </div>
+          
           <label for='variation'>Variation</label>
           <input type='text' id='variation' placeholder='Describe the variation in this benchmark' />
 
-          <button id='startBenchmark' class="outline">Start Benchmark</button>
+          <button id='startBenchmark'>Start Benchmark</button>
+
+          <small><b>Note:</b> Manage benchmark JSON files in the <code>/benchmarks</code> folder.</small>
+
           </article>
         </div>
 
@@ -154,7 +159,9 @@ app.get('/', function (req, res, next) {
       </body>
       <script>
         const str = '${directories.join(',')}'
-        window.benchmarks = str.split(',');
+        window.benchmarkNames = str.split(',');
+
+        window.benchmarks = ${JSON.stringify(benchmarks)}
       </script>
       <script src="./report-server-script.js" async></script>
       
