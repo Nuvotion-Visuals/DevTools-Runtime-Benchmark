@@ -117,30 +117,8 @@ const percentile = require("percentile");
 
     const metadata = trace.metadata
 
-    const data = {
-      benchmarkName,
-      name,
-      frameTimes,
-      timestampedFrameTimes,
-      totalTime,
-      totalTimeSeconds,
-      averageFps,
-      min: (1000 / Math.max(...frameTimes)).toFixed(0),
-      max: (1000 / Math.min(...frameTimes)).toFixed(0),
-      p1: (1000 / percentile(1, frameTimes)).toFixed(0),
-      p10: (1000 / percentile(10, frameTimes)).toFixed(0),
-      p25: (1000 / percentile(25, frameTimes)).toFixed(0),
-      p50: (1000 / percentile(50, frameTimes)).toFixed(0),
-      p75: (1000 / percentile(75, frameTimes)).toFixed(0),
-      p90: (1000 / percentile(90, frameTimes)).toFixed(0),
-      p99: (1000 / percentile(99, frameTimes)).toFixed(0),
-      variation: args?.[1],
-      commands,
-      metadata
-    }
-
-    const correspond = data.commands.slice(
-      data.commands.findIndex(command => command.command === 'trace') + 1
+    const correspond = commands.slice(
+      commands.findIndex(command => command.command === 'trace') + 1
     )
 
     let totalElapsed = 0
@@ -164,6 +142,52 @@ const percentile = require("percentile");
         return label ? label : '-'
       }
       return '-'
+    }
+
+    const calculatePercentageOverFramerate = (fps) => 
+      `${timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length}<br />${((timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length / timestampedFrameTimes.length) * 100).toFixed(0)}`
+    
+    let longFramesTime = 0
+    const longFrames = timestampedFrameTimes?.filter(frame => frame.duration > 100)
+    if (longFrames.length > 0) {
+      longFramesTime = longFrames.map(frame => frame.duration)?.reduce((a, b) => a + b)
+    }
+
+    const data = {
+      benchmarkName,
+      name,
+      frameTimes,
+      timestampedFrameTimes,
+      longFrames: longFrames
+        .map(frame => ({
+          ...frame,
+          possibleCause: recommended(frame.startTime)
+        })),
+      totalTime,
+      totalFrames: timestampedFrameTimes.length,
+      totalTimeSeconds,
+      averageFps,
+      min: (1000 / Math.max(...frameTimes)).toFixed(0),
+      max: (1000 / Math.min(...frameTimes)).toFixed(0),
+      p1: (1000 / percentile(1, frameTimes)).toFixed(0),
+      p10: (1000 / percentile(10, frameTimes)).toFixed(0),
+      p25: (1000 / percentile(25, frameTimes)).toFixed(0),
+      p50: (1000 / percentile(50, frameTimes)).toFixed(0),
+      p75: (1000 / percentile(75, frameTimes)).toFixed(0),
+      p90: (1000 / percentile(90, frameTimes)).toFixed(0),
+      p99: (1000 / percentile(99, frameTimes)).toFixed(0),
+      o25: calculatePercentageOverFramerate(25),
+      o30: calculatePercentageOverFramerate(30),
+      o35: calculatePercentageOverFramerate(35),
+      o40: calculatePercentageOverFramerate(40),
+      o45: calculatePercentageOverFramerate(45),
+      o50: calculatePercentageOverFramerate(50),
+      o55: calculatePercentageOverFramerate(55),
+      o60: calculatePercentageOverFramerate(60),
+      variation: args?.[1],
+      commands,
+      metadata,
+      score:(((1000 / percentile(75, frameTimes)).toFixed(0) / 60) * 100).toFixed(0) - (longFramesTime / 100).toFixed(0)
     }
 
     fs.writeFileSync(
@@ -251,6 +275,9 @@ const percentile = require("percentile");
               <br />
               <br />
 
+              <h1>Score: ${data.score}</h1>
+
+              <h4 style='padding-bottom: 0;'>FPS Percentiles</h4>
               <table role="grid">
                 <thead>
                   <tr>
@@ -280,6 +307,37 @@ const percentile = require("percentile");
                 </tbody>
               </table>
 
+              <h4 style='padding-bottom: 0;'>Minimum FPS Percentages</h4>
+                <table role="grid">
+                  <thead>
+                    <tr>
+                      <th scope="col"><b>25</b></th>
+                      <th scope="col"><b>30</b></th>
+                      <th scope="col"><b>35</b></th>
+                      <th scope="col"><b>40</b></th>
+                      <th scope="col"><b>45</b></th>
+                      <th scope="col"><b>50</b></th>
+                      <th scope="col"><b>55</b></th>
+                      <th scope="col"><b>60</b></th>
+                      <th scope="col"><b>Total</b></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>${data.o25}%</td>
+                      <td>${data.o30}%</td>
+                      <td>${data.o35}%</td>
+                      <td>${data.o40}%</td>
+                      <td>${data.o45}%</td>
+                      <td>${data.o50}%</td>
+                      <td>${data.o55}%</td>
+                      <td>${data.o60}%</td>
+                      <td>${data.timestampedFrameTimes.length}<br />100%</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+              <h4 style='padding-bottom: 0;'>Performance Concerns</h4>
               <table role="grid">
               <thead>
                 <tr>
@@ -291,12 +349,12 @@ const percentile = require("percentile");
               </thead>
               <tbody>
                 ${
-                  data.timestampedFrameTimes.filter(frame => frame.duration > 100).map(({ startTime, endTime, duration, frameNumber }, index) => `
+                  data.longFrames.map(({ startTime, endTime, duration, frameNumber, possibleCause }, index) => `
                       <tr>
                         <td>${frameNumber}</td>
                         <td>${startTime} - ${endTime}</td>
                         <td>${duration}</td>
-                        <td>${recommended(startTime)}</td>
+                        <td>${possibleCause}</td>
                       </tr>
                     `
                   ).join('\n')
