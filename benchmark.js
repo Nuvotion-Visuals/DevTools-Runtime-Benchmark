@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const open = require('open');
 var _ = require('lodash-fp')
 const fs = require('fs');
+const percentile = require("percentile");
 
 (async () => {
   const browser = await puppeteer.launch({
@@ -80,67 +81,87 @@ const fs = require('fs');
     await browser.close()
     await browser.disconnect()
 
-    // // read benchmark
-    const trace = JSON.parse(fs.readFileSync(`benchmark-result/${name}/${name}.json`, 'utf8'))
-
-    // trace Events
-    const traceEvents = trace?.traceEvents
-
-    // get all events for DroppedFrames
-    const droppedFrameEvents = traceEvents.filter(event => event.name === 'DroppedFrame')
-
-    // get total number of frames
-    const totalFrames = traceEvents.filter(event => event.args.frameSeqId !== undefined).length
-
-    // get groups of dropped frames
-    const groups = groupSequences(droppedFrameEvents.map(event => event.args.frameSeqId))
-
-    const droppedFrames = groups.length > 0 ? groups?.map(group => group?.length)?.reduce((a, b) => a + b) : 0
-
-    // dates of first and last frames
-    const firstFrameTime = new Date(traceEvents.filter(event => event.args.frameSeqId)[0].ts)
-    const lastFrameTime = new Date(traceEvents.filter(event => event.args.frameSeqId)[traceEvents.filter(event => event.args.frameSeqId).length - 1].ts)
-
-    // create dropped frames report (console)
-    const metadata = trace.metadata
-
     console.log('Analyzing benchmark.json for dropped frames...\n')
 
-    const percentageDropped = ((droppedFrames / totalFrames) * 100).toFixed(2)
-    const groupsDropped = groups.filter(group => group.length > 1).length
+    // // read benchmark
+    const trace = JSON.parse(fs.readFileSync(`benchmark-result/${name}/${name}.json`, 'utf8'))
+    const traceEvents = trace?.traceEvents
 
-    const groupData = groups.filter(group => group.length > 2).map((group, index) => {
+    const frames = traceEvents.filter(event => event.name === 'BeginMainThreadFrame')
 
-        const startTime = ((new Date((traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)
-        const endTime = ((new Date((traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)
+    const firstFrameTime = new Date(frames.find(event => event.name === 'BeginMainThreadFrame').ts * .001)
 
-        const time = `${startTime} - ${endTime}`
-        const groupDroppedFrames = group.length
-        const durationAffected = endTime - startTime
-        const percentageOfTotalDropped = ((groupDroppedFrames / droppedFrames) * 100).toFixed(0)
-        const flag = durationAffected > ((1000/60) * 2)
-        return {
-          index,
-          time,
-          durationAffected,
-          groupDroppedFrames,
-          percentageOfTotalDropped,
-          flag
-        }
-      })
+    const frameTimes = frames.map((frame, index) => 
+      frames?.[index - 1]
+        ? (frame.ts * .001).toFixed(0) - (frames?.[index - 1].ts * .001).toFixed(0)
+        : firstFrameTime
+    )
+
+    const timestampedFrameTimes = frames.map((frame, index) => ({
+      frameNumber: index,
+      startTime: frames?.[index - 1]?.ts 
+        ? new Date(frames?.[index - 1]?.ts * .001) - firstFrameTime
+        : firstFrameTime,
+      endTime: new Date(frame.ts * .001) - firstFrameTime,
+      duration: frames?.[index - 1]
+        ? (frame.ts * .001).toFixed(0) - (frames?.[index - 1].ts * .001).toFixed(0)
+        : 0
+    }))
+
+    const totalFrames = frameTimes.length
+    const totalTime = frameTimes.reduce((a, b) => a + b)
+    const totalTimeSeconds = totalTime / 1000
+    const averageFps = 1000 / (totalFrames / (totalTime / 1000)).toFixed(0)
+
+    const metadata = trace.metadata
 
     const data = {
       benchmarkName,
       name,
-      duration: ((lastFrameTime - firstFrameTime) * 0.000001).toFixed(0),
-      totalFrames,
-      droppedFrames,
-      percentageDropped,
-      groupsDropped,
-      groupData,
+      frameTimes,
+      timestampedFrameTimes,
+      totalTime,
+      totalTimeSeconds,
+      averageFps,
+      min: (1000 / Math.max(...frameTimes)).toFixed(0),
+      max: (1000 / Math.min(...frameTimes)).toFixed(0),
+      p1: (1000 / percentile(1, frameTimes)).toFixed(0),
+      p10: (1000 / percentile(10, frameTimes)).toFixed(0),
+      p25: (1000 / percentile(25, frameTimes)).toFixed(0),
+      p50: (1000 / percentile(50, frameTimes)).toFixed(0),
+      p75: (1000 / percentile(75, frameTimes)).toFixed(0),
+      p90: (1000 / percentile(90, frameTimes)).toFixed(0),
+      p99: (1000 / percentile(99, frameTimes)).toFixed(0),
       variation: args?.[1],
       commands,
       metadata
+    }
+
+    const correspond = data.commands.slice(
+      data.commands.findIndex(command => command.command === 'trace') + 1
+    )
+
+    let totalElapsed = 0
+    const elapsedCommands = correspond.map(command => {
+      if (command.command === 'wait') {
+        totalElapsed += Number(command.payload)
+      }
+      return {
+        elapsed: totalElapsed,
+        ...command
+      }
+    }).filter(command => command.command === 'click')
+
+    const usedIndicies = []
+    const recommended = (startTime, index) => {
+      const ind = elapsedCommands.findIndex((command) => command.elapsed > startTime - 700 && command.elapsed < startTime + 700) 
+      const label = elapsedCommands.find(command => command.elapsed > startTime - 700 && command.elapsed < startTime + 700)?.description
+      
+      if (!usedIndicies.includes(ind)) {
+        usedIndicies.push(ind)
+        return label ? label : '-'
+      }
+      return '-'
     }
 
     fs.writeFileSync(
@@ -227,58 +248,59 @@ const fs = require('fs');
               <small><b>Hardware:</b> ${data.metadata['num-cpus']} CPUs | ${(data.metadata['physical-memory'] / 1024).toFixed(0)} GB - ${data.metadata['cpu-brand']}\n</small>
               <br />
               <br />
-              <table style="table-layout: fixed;">
-                <tbody>
-                  <tr>
-                    <td><b>Duration</b></td>
-                    <td>${data.duration} seconds</td>
-                  </tr>
-                  <tr>
-                    <td><b>Total Frames</b></td>
-                    <td>${data.totalFrames}</td>
-                  </tr>
-                  <tr>
-                    <td><b>Dropped Frames</b></td>
-                    <td>${data.droppedFrames}</td>
-                  </tr>
-                  <tr>
-                    <td><b>Percentage Dropped</b></td>
-                    <td ${data.percentageDropped > 5 ? 'style="color:red;";' : ''}>${data.percentageDropped}%</td>
-                  </tr>
-                  <tr>
-                    <td><b>Groups of > 1 dropped frames</b></td>
-                    <td ${data.groupsDropped > 0 ? 'style="color:red;";' : ''}>${data.groupsDropped}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <br />
+
               <table role="grid">
                 <thead>
                   <tr>
-                    <th scope="col"><b>Index</b></th>
-                    <th scope="col"><b>Time (ms)</b></th>
-                    <th scope="col"><b>~ Duration Affected (ms)</b></th>
-                    <th scope="col"><b>Dropped Frames</b></th>
-                    <th scope="col"><b>% of Total Dropped</b></th>
+                    <th scope="col"><b>Min</b></th>
+                    <th scope="col"><b>P99</b></th>
+                    <th scope="col"><b>P90</b></th>
+                    <th scope="col"><b>P75</b></th>
+                    <th scope="col"><b>P50</b></th>
+                    <th scope="col"><b>P25</b></th>
+                    <th scope="col"><b>P10</b></th>
+                    <th scope="col"><b>P1</b></th>
+                    <th scope="col"><b>Max</b></th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${
-                    data.groupData.map((data, index) => {
-                      const { time, durationAffected, groupDroppedFrames, percentageOfTotalDropped, flag } = data
-                      return `
-                        <tr>
-                          <td ${flag ? 'style="color:red;";' : ''}>${index}</td>
-                          <td ${flag ? 'style="color:red;";' : ''}>${time}</td>
-                          <td ${flag ? 'style="color:red;";' : ''}>${durationAffected}</td>
-                          <td ${flag ? 'style="color:red;";' : ''}>${groupDroppedFrames}</td>
-                          <td ${flag ? 'style="color:red;";' : ''}>${percentageOfTotalDropped}%</td>
-                        </tr>
-                      `
-                    }).join('\n')
-                  }
+                  <tr>
+                    <td>${data.min}</td>
+                    <td>${data.p99}</td>
+                    <td>${data.p90}</td>
+                    <td>${data.p75}</td>
+                    <td>${data.p50}</td>
+                    <td>${data.p25}</td>
+                    <td>${data.p10}</td>
+                    <td>${data.p1}</td>
+                    <td>${data.max}</td>
+                  </tr>
                 </tbody>
               </table>
+
+              <table role="grid">
+              <thead>
+                <tr>
+                  <th scope="col"><b>Frame Number</b></th>
+                  <th scope="col"><b>Time Affected</b></th>
+                  <th scope="col"><b>Duration</b></th>
+                  <th scope="col"><b>Possible Cause</b></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  data.timestampedFrameTimes.filter(frame => frame.duration > 100).map(({ startTime, endTime, duration, frameNumber }, index) => `
+                      <tr>
+                        <td>${frameNumber}</td>
+                        <td>${startTime} - ${endTime}</td>
+                        <td>${duration}</td>
+                        <td>${recommended(startTime)}</td>
+                      </tr>
+                    `
+                  ).join('\n')
+                }
+              </tbody>
+            </table>
             </main>
             <iframe src='${`http://localhost:8833/?loadTimelineFromURL=http://localhost:4000/${data.name}/${data.name}.json`}'>
             </iframe>

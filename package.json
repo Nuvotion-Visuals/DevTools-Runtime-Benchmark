@@ -37,6 +37,7 @@
     "lodash-fp": "^0.10.4",
     "nodemon": "^2.0.15",
     "open": "^8.4.0",
+    "percentile": "^1.6.0",
     "puppeteer": "^13.7.0"
   },
   "directories": {
