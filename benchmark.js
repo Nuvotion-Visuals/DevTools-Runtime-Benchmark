@@ -32,15 +32,18 @@ const fs = require('fs');
     const page = await browser.newPage()
 
     // show FPS
-    // const devtoolsProtocolClient = await page.target().createCDPSession()
-    // await devtoolsProtocolClient.send('Overlay.setShowFPSCounter', { show: true })
-
-    // console logging
-   
+    const devtoolsProtocolClient = await page.target().createCDPSession()
+    await devtoolsProtocolClient.send('Overlay.setShowFPSCounter', { show: true })  
+    
+    await devtoolsProtocolClient.send('Log.enable')
+    
+    let consoleLogs = []
+    devtoolsProtocolClient.on('Log.entryAdded', async ({ entry }) => {
+      consoleLogs.push(entry)
+    })
 
     await page.goto(url, { waitUntil: 'domcontentloaded' })
 
-    let consoleLogs = []
     
     let commandIndex = 0
     while (commandIndex < commands.length) {
@@ -60,20 +63,13 @@ const fs = require('fs');
             ? await page.tracing.start({path: `benchmark-result/${name}/${name}.json`, screenshots: true})
             : await page.tracing.stop()
 
-          // if (payload === 'start') {
-          //   await devtoolsProtocolClient.send('Log.enable')
-
-          //   devtoolsProtocolClient.on('Log.entryAdded', async ({ entry }) => {
-          //     consoleLogs.push(entry)
-          //   })
-          // }
-          // if (payload === 'stop') {
-          //   await devtoolsProtocolClient.send('Log.disable')
-          //   fs.writeFileSync(
-          //     `benchmark-result/${name}/${name}-console.json`,
-          //     JSON.stringify(console, null, 2)
-          //   )
-          // }
+          if (payload === 'stop') {
+            await devtoolsProtocolClient.send('Log.disable')
+            fs.writeFileSync(
+              `benchmark-result/${name}/${name}-console.json`,
+              JSON.stringify(consoleLogs, null, 2)
+            )
+          }
           break
         default:
           break
