@@ -98,7 +98,7 @@ app.get('/', function (req, res, next) {
             <tr>
               <th scope="col" width="36px"><a href="#" role="button" id='compare' class="outline">Compare</a></th>
               <th scope="col" width="36px" ><b>Index</b></th>
-              <th scope="col" width="200px"><b>Date</b></th>
+              <th scope="col" width="230px"><b>Date</b></th>
               <th scope="col" width="300px"><b>Benchmark Name</b></th>
               <th scope="col"><b>Variation</b></col>
               <th scope="col" width="36px"><a href="#" role="button" class="secondary outline" id='delete'>Delete</a></col>

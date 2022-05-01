@@ -121,14 +121,14 @@ document.querySelector('#compare').addEventListener('click', event => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>${data.o25}%</td>
-                    <td>${data.o30}%</td>
-                    <td>${data.o35}%</td>
-                    <td>${data.o40}%</td>
-                    <td>${data.o45}%</td>
-                    <td>${data.o50}%</td>
-                    <td>${data.o55}%</td>
-                    <td>${data.o60}%</td>
+                    <td>${data.o25}</td>
+                    <td>${data.o30}</td>
+                    <td>${data.o35}</td>
+                    <td>${data.o40}</td>
+                    <td>${data.o45}</td>
+                    <td>${data.o50}</td>
+                    <td>${data.o55}</td>
+                    <td>${data.o60}</td>
                     <td>${data.timestampedFrameTimes.length}<br />100%</td>
                   </tr>
                 </tbody>

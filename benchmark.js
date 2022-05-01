@@ -25,7 +25,8 @@ const percentile = require("percentile");
     // add command line argument explaining benchmark testing variation
 
     const now = new Date()
-    const name = `benchmark_${benchmarkName}_${now.getFullYear()}-${now.getMonth() + 1}-${now.getDay()}-${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`
+    const pad = number => number.toString().padStart(2, "0")
+    const name = `benchmark_${benchmarkName}_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDay())}-${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
 
     // create benchmark results folder
     !fs.existsSync(`./benchmark-result/${name}`) && fs.mkdirSync(`./benchmark-result/${name}`, { recursive: true })
@@ -145,7 +146,7 @@ const percentile = require("percentile");
     }
 
     const calculatePercentageOverFramerate = (fps) => 
-      `${timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length}<br />${((timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length / timestampedFrameTimes.length) * 100).toFixed(0)}`
+      `${((timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length / timestampedFrameTimes.length) * 100).toFixed(0)}%<br/>${timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length}`
     
     let longFramesTime = 0
     const longFrames = timestampedFrameTimes?.filter(frame => frame.duration > 100)
@@ -326,15 +327,15 @@ const percentile = require("percentile");
                   </thead>
                   <tbody>
                     <tr>
-                      <td>${data.o25}%</td>
-                      <td>${data.o30}%</td>
-                      <td>${data.o35}%</td>
-                      <td>${data.o40}%</td>
-                      <td>${data.o45}%</td>
-                      <td>${data.o50}%</td>
-                      <td>${data.o55}%</td>
-                      <td>${data.o60}%</td>
-                      <td>${data.timestampedFrameTimes.length}<br />100%</td>
+                      <td>${data.o25}</td>
+                      <td>${data.o30}</td>
+                      <td>${data.o35}</td>
+                      <td>${data.o40}</td>
+                      <td>${data.o45}</td>
+                      <td>${data.o50}</td>
+                      <td>${data.o55}</td>
+                      <td>${data.o60}</td>
+                      <td>100%<br />${data.timestampedFrameTimes.length}</td>
                     </tr>
                   </tbody>
                 </table>
