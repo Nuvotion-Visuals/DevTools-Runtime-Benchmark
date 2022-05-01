@@ -14,12 +14,13 @@ const fs = require('fs');
   try {
     const args = process.argv.slice(2);
 
+    const benchmarkName = args?.[0]
+
     const { 
-      benchmarkName, 
       benchmarkDescription, 
       commands, 
       url 
-    } = JSON.parse(fs.readFileSync(`benchmarks/addScene.json`, 'utf8')) // replace with command line argument'
+    } = JSON.parse(fs.readFileSync(`benchmarks/${benchmarkName}.json`, 'utf8')) // replace with command line argument'
     // add command line argument explaining benchmark testing variation
 
     const now = new Date()
@@ -43,7 +44,6 @@ const fs = require('fs');
     })
 
     await page.goto(url, { waitUntil: 'domcontentloaded' })
-
     
     let commandIndex = 0
     while (commandIndex < commands.length) {
@@ -83,23 +83,23 @@ const fs = require('fs');
     // // read benchmark
     const trace = JSON.parse(fs.readFileSync(`benchmark-result/${name}/${name}.json`, 'utf8'))
 
-    // starting frame of benchmark
-    const firstFrameSeqId = trace?.traceEvents.find(event => event.args.frameSeqId).args.frameSeqId 
+    // trace Events
+    const traceEvents = trace?.traceEvents
 
     // get all events for DroppedFrames
-    const droppedFrameEvents = trace?.traceEvents.filter(event => event.name === 'DroppedFrame')
+    const droppedFrameEvents = traceEvents.filter(event => event.name === 'DroppedFrame')
 
     // get total number of frames
-    const totalFrames = (trace?.traceEvents.filter(event => event.args.frameSeqId).length - firstFrameSeqId) // count only frames in the benchmark
+    const totalFrames = traceEvents.filter(event => event.args.frameSeqId !== undefined).length
 
     // get groups of dropped frames
     const groups = groupSequences(droppedFrameEvents.map(event => event.args.frameSeqId))
 
-    const droppedFrames = groups.map(group => group.length).reduce((a, b) => a + b)
+    const droppedFrames = groups.length > 0 ? groups?.map(group => group?.length)?.reduce((a, b) => a + b) : 0
 
     // dates of first and last frames
-    const firstFrameTime = new Date(trace?.traceEvents.filter(event => event.args.frameSeqId)[0].ts)
-    const lastFrameTime = new Date(trace?.traceEvents.filter(event => event.args.frameSeqId)[trace?.traceEvents.filter(event => event.args.frameSeqId).length - 1].ts)
+    const firstFrameTime = new Date(traceEvents.filter(event => event.args.frameSeqId)[0].ts)
+    const lastFrameTime = new Date(traceEvents.filter(event => event.args.frameSeqId)[traceEvents.filter(event => event.args.frameSeqId).length - 1].ts)
 
     // create dropped frames report (console)
     const metadata = trace.metadata
@@ -109,10 +109,14 @@ const fs = require('fs');
     const percentageDropped = ((droppedFrames / totalFrames) * 100).toFixed(2)
     const groupsDropped = groups.filter(group => group.length > 1).length
 
-    const groupData = groups.map((group, index) => {
-        const time = `${((new Date((trace?.traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)} - ${((new Date((trace?.traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)}`
+    const groupData = groups.filter(group => group.length > 2).map((group, index) => {
+
+        const startTime = ((new Date((traceEvents.find(event => group[0] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)
+        const endTime = ((new Date((traceEvents.find(event => group[group.length - 1] === event.args.frameSeqId)).ts) - firstFrameTime)* 0.001).toFixed(0)
+
+        const time = `${startTime} - ${endTime}`
         const groupDroppedFrames = group.length
-        const durationAffected = (groupDroppedFrames * (1000 / 60)).toFixed(2)
+        const durationAffected = endTime - startTime
         const percentageOfTotalDropped = ((groupDroppedFrames / droppedFrames) * 100).toFixed(0)
         const flag = durationAffected > ((1000/60) * 2)
         return {
@@ -134,7 +138,7 @@ const fs = require('fs');
       percentageDropped,
       groupsDropped,
       groupData,
-      variation: args?.[0],
+      variation: args?.[1],
       commands,
       metadata
     }
@@ -294,7 +298,7 @@ const fs = require('fs');
 const groupSequences = (array) => (
   _.reduce((result, value, index, collection) => {
     const difference = value - collection[index - 1]
-    if ([1, 2, 3, 4, 5].includes(difference)) {
+    if ([1].includes(difference)) {
       const group = _.last(result)
       group.push(value)
     } else {

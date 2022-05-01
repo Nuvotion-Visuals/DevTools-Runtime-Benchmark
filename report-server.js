@@ -1,4 +1,5 @@
 const fs = require('fs')
+const path = require('path')
 const cors = require('cors');
 const { spawn } = require('child_process');
 const express = require('express')
@@ -12,7 +13,7 @@ app.use(express.static(__dirname + '/benchmark-result'))
 app.listen(port)
 
 app.post('/benchmark', function (req, res, next) {
-  const dir = spawn( 'node', [ 'benchmark.js', `"${req.body?.variation}"`], { shell: true } );
+  const dir = spawn( 'node', [ 'benchmark.js', `"${req.body?.benchmarkName}"`, `"${req.body?.variation}"`], { shell: true } );
   dir.stdout.on( 'data', ( data ) => console.log( `stdout: ${ data }` ) );
   dir.stderr.on( 'data', ( data ) => console.log( `stderr: ${ data }` ) );
   dir.on( 'close', ( code ) => {
@@ -42,6 +43,16 @@ app.get('/', function (req, res, next) {
   directories.forEach((directory, index) => {
     benchmarkInfo[index] = JSON.parse(fs.readFileSync(`benchmark-result/${directory}/${directory}-info.json`, 'utf8'))
   })
+  
+  const jsonsInDir = fs.readdirSync(__dirname + `/benchmarks`).filter(file => path.extname(file) === '.json');
+
+  const benchmarks = []
+
+  jsonsInDir.forEach(file => {
+    const fileData = fs.readFileSync(path.join(__dirname + '/benchmarks', file));
+    const json = JSON.parse(fileData.toString());
+    benchmarks.push(json)
+  });
 
   res.end(`
     <!doctype html>
@@ -128,8 +139,9 @@ app.get('/', function (req, res, next) {
           <label for='selectBenchmark'>Benchmark</label>
 
           <select id="selectBenchmark">
-            <option selected>AddScene</option>
+            ${ benchmarks.map(benchmark => '<option>' + benchmark.benchmarkName + '</option>')}
           </select>
+
 
           <label for='variation'>Variation</label>
           <input type='text' id='variation' placeholder='Describe the variation in this benchmark' />

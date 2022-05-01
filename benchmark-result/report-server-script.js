@@ -140,7 +140,10 @@ document.querySelector('#startBenchmark').addEventListener('click', event => {
   fetch('/benchmark', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'}, 
-    body: JSON.stringify({ variation: document.querySelector('#variation').value })
+    body: JSON.stringify({ 
+      variation: document.querySelector('#variation').value,
+      benchmarkName: document.querySelector('#selectBenchmark').value
+    })
   }).then(res => {
     location.reload()
   })

@@ -1,0 +1,27 @@
+{
+  "benchmarkName": "Homepage",
+  "benchmarkDescription": "Load homepage",
+  "url": "http://localhost:3000",
+  "commands": [
+    {
+      "command": "wait",
+      "payload": "1",
+      "description": "Wait"
+    },
+    {
+      "command": "trace",
+      "payload": "start",
+      "description": "Start tracing"
+    },
+    {
+      "command": "wait",
+      "payload": "1000",
+      "description": "Wait"
+    },
+    {
+      "command": "trace",
+      "payload": "stop",
+      "description": "Stop tracing"
+    }
+  ]
+}
