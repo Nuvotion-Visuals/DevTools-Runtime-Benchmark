@@ -94,18 +94,20 @@ const percentile = require("percentile");
     const frameTimes = frames.map((frame, index) => 
       frames?.[index - 1]
         ? (frame.ts * .001).toFixed(0) - (frames?.[index - 1].ts * .001).toFixed(0)
-        : firstFrameTime
+        : 17
     )
 
     const timestampedFrameTimes = frames.map((frame, index) => ({
       frameNumber: index,
       startTime: frames?.[index - 1]?.ts 
         ? new Date(frames?.[index - 1]?.ts * .001) - firstFrameTime
-        : firstFrameTime,
-      endTime: new Date(frame.ts * .001) - firstFrameTime,
+        : 0,
+      endTime: frames?.[index - 1]?.ts 
+        ? new Date(frame.ts * .001) - firstFrameTime
+        : 17,
       duration: frames?.[index - 1]
         ? (frame.ts * .001).toFixed(0) - (frames?.[index - 1].ts * .001).toFixed(0)
-        : 0
+        : 17
     }))
 
     const totalFrames = frameTimes.length

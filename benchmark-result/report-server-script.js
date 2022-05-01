@@ -54,6 +54,16 @@ document.querySelector('#compare').addEventListener('click', event => {
           return '-'
         }
 
+        const calculatePercentageOverFramerate = (fps) => 
+          `${data.timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length}<br />${((data.timestampedFrameTimes.filter(frame => frame.duration <= 1000 / fps).length / data.timestampedFrameTimes.length) * 100).toFixed(0)}`
+        
+        let longFramesTime = 0
+        const longFrames = data.timestampedFrameTimes?.filter(frame => frame.duration > 100)
+        if (longFrames.length > 0) {
+          longFramesTime = longFrames.map(frame => frame.duration)?.reduce((a, b) => a + b)
+        }
+        const score = ((data.p75 / 60) * 100).toFixed(0) - (longFramesTime / 100).toFixed(0)
+
         return `
           <article>
           <hgroup>
@@ -95,8 +105,10 @@ document.querySelector('#compare').addEventListener('click', event => {
               <small><b>Hardware:</b> ${data.metadata['num-cpus']} CPUs | ${(data.metadata['physical-memory'] / 1024).toFixed(0)} GB - ${data.metadata['cpu-brand']}\n</small>
               <br />
               <br />
+
+              <h1 style='padding-bottom: 0;'>Score: ${score}<h1>
               
-              <h4 style='padding-bottom: 0;'>Frametime Statistics</h4>
+              <h4 style='padding-bottom: 0;'>FPS Percentiles</h4>
               <table role="grid">
                 <thead>
                   <tr>
@@ -126,8 +138,37 @@ document.querySelector('#compare').addEventListener('click', event => {
                 </tbody>
               </table>
 
+              <h4 style='padding-bottom: 0;'>Minimum FPS Percentages</h4>
+              <table role="grid">
+                <thead>
+                  <tr>
+                    <th scope="col"><b>25</b></th>
+                    <th scope="col"><b>30</b></th>
+                    <th scope="col"><b>35</b></th>
+                    <th scope="col"><b>40</b></th>
+                    <th scope="col"><b>45</b></th>
+                    <th scope="col"><b>50</b></th>
+                    <th scope="col"><b>55</b></th>
+                    <th scope="col"><b>60</b></th>
+                    <th scope="col"><b>Total</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${calculatePercentageOverFramerate(25)}%</td>
+                    <td>${calculatePercentageOverFramerate(30)}%</td>
+                    <td>${calculatePercentageOverFramerate(35)}%</td>
+                    <td>${calculatePercentageOverFramerate(40)}%</td>
+                    <td>${calculatePercentageOverFramerate(45)}%</td>
+                    <td>${calculatePercentageOverFramerate(50)}%</td>
+                    <td>${calculatePercentageOverFramerate(55)}%</td>
+                    <td>${calculatePercentageOverFramerate(60)}%</td>
+                    <td>${data.timestampedFrameTimes.length}<br />100%</td>
+                  </tr>
+                </tbody>
+              </table>
+
               <h4 style='padding-bottom: 0;'>Performance Concerns</h4>
-              <p>The following are significant occurances of dropped frames.</p>
               <table role="grid">
               <thead>
                 <tr>
