@@ -1,0 +1,77 @@
+{
+  "benchmarkName": "CreateScene",
+  "benchmarkDescription": "Create a Scene by clicking the Add to Playlist Button",
+  "url": "http://localhost:3000/deck",
+  "commands": [
+    {
+      "command": "wait",
+      "payload": "20000",
+      "description": "Wait for the startup scripts to finish executing"
+    },
+    {
+      "command": "click",
+      "payload": "#addScene",
+      "description": "Click the Add Scene tile in the deck"
+    },
+    {
+      "command": "wait",
+      "payload": "5000",
+      "description": "Wait for the Scenes in the modal to load"
+    },
+    {
+      "command": "click",
+      "payload": "#addScene_0",
+      "description": "Click the first Scene in the list to add it to the Playlist"
+    },
+    {
+      "command": "wait",
+      "payload": "2000",
+      "description": "Wait for the Scenes in the modal to load"
+    },
+    {
+      "command": "click",
+      "payload": "#sceneTile_0",
+      "description": "Transition to the first Scene"
+    },
+    {
+      "command": "wait",
+      "payload": "5000",
+      "description": "Wait"
+    },
+    {
+      "command": "click",
+      "payload": "#renderControls_addToPlaylist",
+      "description": "Add to Playlist"
+    },
+    {
+      "command": "wait",
+      "payload": "500",
+      "description": "Wait"
+    },
+    {
+      "command": "trace",
+      "payload": "start",
+      "description": "Start tracing"
+    },
+    {
+      "command": "wait",
+      "payload": "500",
+      "description": "Wait"
+    },
+    {
+      "command": "click",
+      "payload": "#renderControls_addToPlaylist",
+      "description": "Add to Playlist"
+    },
+    {
+      "command": "wait",
+      "payload": "500",
+      "description": "Wait"
+    },
+    {
+      "command": "trace",
+      "payload": "stop",
+      "description": "Stop tracing"
+    }
+  ]
+}
