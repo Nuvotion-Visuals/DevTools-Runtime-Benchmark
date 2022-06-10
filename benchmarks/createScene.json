@@ -55,7 +55,7 @@
     },
     {
       "command": "wait",
-      "payload": "500",
+      "payload": "2000",
       "description": "Wait"
     },
     {
@@ -65,7 +65,7 @@
     },
     {
       "command": "wait",
-      "payload": "500",
+      "payload": "2000",
       "description": "Wait"
     },
     {
